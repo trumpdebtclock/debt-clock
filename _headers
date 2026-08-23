@@ -1,0 +1,5 @@
+/data.json
+  Cache-Control: public, max-age=900, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=300

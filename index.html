@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Debt Accrual Monitor — Federal debt added under Donald Trump</title>
+<meta name="description" content="A live projection of U.S. national debt added during Donald Trump's two terms, anchored to the Treasury's Debt to the Penny series, with a term-by-term breakdown by president.">
+<meta name="color-scheme" content="light">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FCFBF9; --panel:#F5F3EF;
+    --ink:#14171A; --ink-2:#565E64; --ink-3:#8A9198;
+    --line:#E3E1DC; --line-2:#CFCCC6;
+    --o-strong:#DD5A12; --o-soft:#F19A4E;
+    --warn:#8A5A12; --warn-bg:#FBF3E4; --warn-line:#EBD9B4;
+    --mono:"Azeret Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:"Newsreader",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1000px;margin:0 auto;padding:0 24px 80px}
+
+  .masthead{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;padding:20px 0 16px;border-bottom:1px solid var(--line)}
+  .mark{font-family:var(--serif);font-size:16px;font-weight:500}
+  .mark span{color:var(--ink-3);font-weight:400}
+  .feed{display:flex;align-items:center;gap:7px;font-size:11.5px;letter-spacing:.06em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--o-strong);flex:none}
+  .dot.stale{background:var(--warn)}
+
+  .staleBanner{display:none;margin:18px 0 0;padding:12px 15px;border:1px solid var(--warn-line);background:var(--warn-bg);border-radius:3px;font-size:13.5px;line-height:1.6;color:var(--warn)}
+  .staleBanner.show{display:block}
+  .staleBanner b{font-weight:600}
+
+  .hero{padding:56px 0 8px}
+  .eyebrow{margin:0 0 14px;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+  h1{font-family:var(--serif);font-weight:400;font-size:clamp(21px,2.9vw,30px);line-height:1.25;letter-spacing:-.01em;margin:0 0 28px;max-width:20ch}
+  .counter{font-family:var(--mono);font-weight:600;font-variant-numeric:tabular-nums;font-size:clamp(1.55rem,6vw,4.05rem);letter-spacing:-.045em;line-height:1;white-space:nowrap;display:flex;align-items:baseline;gap:.04em}
+  .counter .sign{font-weight:500;opacity:.4}
+  .counter .tail{color:var(--line-2)}
+  .readout{display:flex;flex-wrap:wrap;gap:6px 26px;align-items:baseline;margin:20px 0 0;font-size:14px;color:var(--ink-2)}
+  .readout b{font-family:var(--mono);font-weight:500;font-size:13.5px;color:var(--ink);letter-spacing:-.02em}
+  .readout .share b{color:var(--o-strong)}
+
+  .switch{display:inline-flex;margin:30px 0 0;border:1px solid var(--line-2);border-radius:3px;overflow:hidden;background:#fff}
+  .switch button{appearance:none;background:transparent;border:0;cursor:pointer;font-family:var(--sans);color:var(--ink-2);font-size:12px;letter-spacing:.04em;padding:9px 16px;transition:background .15s,color .15s}
+  .switch button + button{border-left:1px solid var(--line-2)}
+  .switch button[aria-pressed="true"]{background:var(--ink);color:#fff}
+  .switch button:not([aria-pressed="true"]):hover{background:var(--panel);color:var(--ink)}
+  .switch button:focus-visible{outline:2px solid var(--o-strong);outline-offset:-3px}
+
+  .chart{margin:64px 0 0;padding:34px 0 0;border-top:1px solid var(--line)}
+  .chart h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 4px;letter-spacing:-.01em}
+  .chart .lede{margin:0 0 30px;font-size:14px;color:var(--ink-2);max-width:62ch}
+  .split{display:grid;grid-template-columns:minmax(230px,1fr) 1.3fr;gap:44px;align-items:center}
+  .donutBox{position:relative}
+  .donut{display:block;width:100%;height:auto}
+  .donut path{stroke:var(--paper);stroke-width:1.4;cursor:pointer;transition:opacity .16s}
+  .donut.focused path{opacity:.26}
+  .donut.focused path.on{opacity:1}
+  .hub{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;pointer-events:none;padding:0 19%}
+  .hub .pct{font-family:var(--mono);font-weight:600;font-size:clamp(1.45rem,4.2vw,2rem);letter-spacing:-.04em;line-height:1;color:var(--o-strong)}
+  .hub .pct.grey{color:var(--ink)}
+  .hub .who{margin-top:8px;font-size:11.5px;line-height:1.35;color:var(--ink-2)}
+  .hub .amt{margin-top:3px;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);letter-spacing:-.02em}
+
+  .legend{list-style:none;margin:0;padding:0;border-top:1px solid var(--line-2)}
+  .legend li{border-bottom:1px solid var(--line)}
+  .legend li.newpres{border-top:1px solid var(--line-2)}
+  .legend li.newpres:first-child{border-top:0}
+  .legend button{width:100%;appearance:none;background:none;border:0;cursor:pointer;text-align:left;display:grid;grid-template-columns:10px 1fr auto auto;gap:0 12px;align-items:baseline;padding:7px 4px;font-family:var(--sans);font-size:13.5px;color:var(--ink)}
+  .legend button:hover{background:var(--panel)}
+  .legend button:focus-visible{outline:2px solid var(--o-strong);outline-offset:-2px}
+  .legend .sw{width:10px;height:10px;border-radius:2px;align-self:center}
+  .legend .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .legend .nm.cont{color:var(--ink-3)}
+  .legend .yr{color:var(--ink-3);font-size:12px;margin-left:7px}
+  .legend .amt{font-family:var(--mono);font-size:12.5px;letter-spacing:-.02em;color:var(--ink-2);text-align:right}
+  .legend .pc{font-family:var(--mono);font-size:12.5px;letter-spacing:-.02em;text-align:right;min-width:5.4ch}
+  .legend li.trump .pc{color:var(--o-strong);font-weight:600}
+  .legend li.trump .nm{font-weight:600;color:var(--ink)}
+
+  .ledger{margin:64px 0 0;padding:34px 0 0;border-top:1px solid var(--line)}
+  .ledger h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 18px;letter-spacing:-.01em}
+  dl{margin:0}
+  .row{display:flex;flex-wrap:wrap;gap:4px 18px;justify-content:space-between;align-items:baseline;padding:11px 0;border-bottom:1px solid var(--line)}
+  .row dt{margin:0;font-size:13.5px;color:var(--ink-2)}
+  .row dd{margin:0;font-family:var(--mono);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;text-align:right}
+  .ledger .foot{margin:14px 0 0;font-size:12.5px;color:var(--ink-3);max-width:64ch}
+
+  .method{margin:64px 0 0;padding:34px 0 0;border-top:1px solid var(--line);max-width:68ch}
+  .method h2{font-family:var(--serif);font-weight:500;font-size:20px;margin:0 0 16px;letter-spacing:-.01em}
+  .method p{margin:0 0 15px;font-size:14px;line-height:1.72;color:var(--ink-2)}
+  .method p strong{color:var(--ink);font-weight:600}
+  .method a{color:var(--ink);text-decoration:underline;text-underline-offset:3px;text-decoration-color:var(--line-2)}
+  .method a:hover{text-decoration-color:var(--o-strong)}
+
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+  @media (max-width:760px){
+    .split{grid-template-columns:1fr;gap:32px}
+    .donutBox{max-width:320px;margin:0 auto}
+    .hero{padding:40px 0 8px}
+    .legend button{grid-template-columns:10px 1fr auto;gap:0 10px}
+    .legend .amt{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="mark">Debt Accrual Monitor <span>· total public debt outstanding</span></div>
+    <div class="feed"><span class="dot" id="dot"></span><span id="feedState">Loading…</span></div>
+  </header>
+
+  <div class="staleBanner" id="staleBanner"></div>
+
+  <section class="hero">
+    <p class="eyebrow" id="eyebrow">January 2017 – January 2021 and January 2025 – present</p>
+    <h1 id="headline">Federal debt added during Donald Trump's two terms in office</h1>
+
+    <div class="counter" aria-hidden="true">
+      <span class="sign">$</span><span id="head">—</span><span class="tail" id="tail"></span>
+    </div>
+    <p class="sr" id="srValue" aria-live="polite"></p>
+
+    <div class="readout">
+      <span class="share"><b id="sharePct">—</b> of all federal debt outstanding</span>
+      <span><b id="perSec">—</b> per second</span>
+      <span><b id="perDay">—</b> per day</span>
+    </div>
+
+    <div class="switch" role="group" aria-label="Which terms to measure">
+      <button type="button" id="btnBoth" aria-pressed="true">Both terms</button>
+      <button type="button" id="btnT2" aria-pressed="false">Second term only</button>
+    </div>
+  </section>
+
+  <section class="chart">
+    <h2>Who the debt was accrued under</h2>
+    <p class="lede">Every dollar of debt outstanding today, split by the presidential term during which it was borrowed. Grouped by president, then ordered by first inauguration, so each president's terms sit side by side. Trump's terms in orange.</p>
+    <div class="split">
+      <div class="donutBox">
+        <svg class="donut" id="donut" viewBox="0 0 300 300" role="img" aria-labelledby="donutTitle"></svg>
+        <h3 id="donutTitle" class="sr">Debt outstanding by the presidential term during which it was borrowed</h3>
+        <div class="hub">
+          <span class="pct" id="hubPct">—</span>
+          <span class="who" id="hubWho"></span>
+          <span class="amt" id="hubAmt"></span>
+        </div>
+      </div>
+      <ul class="legend" id="legend"></ul>
+    </div>
+  </section>
+
+  <section class="ledger">
+    <h2>Ledger</h2>
+    <dl>
+      <div class="row"><dt id="baseLabel">Baseline</dt><dd id="baseVal">—</dd></div>
+      <div class="row"><dt>Latest official Treasury record</dt><dd id="latestVal">—</dd></div>
+      <div class="row"><dt>Total debt outstanding at that record</dt><dd id="officialVal">—</dd></div>
+      <div class="row"><dt>Projected total, right now</dt><dd id="totalVal">—</dd></div>
+      <div class="row"><dt id="paceLabel">Observed pace</dt><dd id="paceVal">—</dd></div>
+      <div class="row"><dt id="elapsedLabel">Days elapsed</dt><dd id="elapsedVal">—</dd></div>
+      <div class="row"><dt>Figures last collected from Treasury</dt><dd id="builtVal">—</dd></div>
+      <div class="row"><dt>Next Treasury release expected</dt><dd id="releaseVal">—</dd></div>
+    </dl>
+    <p class="foot">Treasury publishes Debt to the Penny once each business day at about 3:00 PM Eastern, carrying the previous business day's closing balance. On a weekend or holiday the newest record in existence can be several days old. This site collects that figure once per weekday and serves the same copy to everyone; your browser makes no request to Treasury.</p>
+  </section>
+
+  <section class="method">
+    <h2>How this works</h2>
+    <p>The counter is anchored to <a href="https://fiscaldata.treasury.gov/datasets/debt-to-the-penny/" target="_blank" rel="noopener">Debt to the Penny</a>, the Treasury's official record of total public debt outstanding, published to the cent. A scheduled job collects that figure once per weekday and writes it into this page's data file. Between releases the page projects forward in a straight line at the pace observed over the trailing 90 days, then re-anchors when the next figure is collected. <strong>The last three digits are shown in grey because they are projected, not reported.</strong> The projection normally sits within a few hundredths of a percent of the figure Treasury later publishes.</p>
+    <p>The counter only moves up. Total public debt does fall on some days, when Treasury retires more than it issues, so a strictly rising display will run slightly ahead after a down day and then flatten until the official series catches up. If the collection job stops running, the page says so rather than projecting quietly from an ageing anchor.</p>
+    <p><strong>Term boundaries.</strong> Debt to the Penny runs daily from 1 April 1993, so every boundary from 1997 onward is taken from Treasury at its exact published value. Where Inauguration Day falls on a weekend or federal holiday and Treasury published no record, the last business day before it is used, and the ledger names the date actually used. Boundaries before 1993 — 1981, 1985, 1989 and 1993 — predate the daily series and come from the Congressional Research Service's compilation of Treasury statements on or near Inauguration Days (report IN11754), which uses the nearest end-of-month figure. Everything borrowed before 1981 is a single slice.</p>
+    <p><strong>On the metric.</strong> This measures debt outstanding when a term began against debt outstanding when it ended. It is a fact about the calendar, not an attribution of cause. Debt levels reflect tax and spending law passed by many Congresses, interest owed on securities issued long before the current term, automatic programs such as Social Security and Medicare, and the state of the economy — a recession raises borrowing regardless of who holds office. Presidents sign bills; they do not set the total alone. Splitting by term makes that visible: the same president can preside over very different rates of borrowing in consecutive terms.</p>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DATA_URL  = "data.json";
+  var RECHECK_MS = 60 * 60 * 1000;   // re-read our own data file hourly
+  var STALE_DAYS = 4;                // flag the page beyond this
+  var DAY = 86400000;
+
+  /* Boundaries before the daily Treasury series begins.
+     CRS IN11754, Treasury statements on or near Inauguration Day. */
+  var MARKS = { m1981:934073000000, m1985:1679313000000, m1989:2697957000000, m1993:4167200000000 };
+  var MARK_DATE = { m1981:"1981-01-31", m1985:"1985-01-31", m1989:"1989-01-31", m1993:"1993-01-31" };
+
+  var ERAS = [
+    { key:"pre",      pres:"All presidents before 1981", term:"1789–1981", from:null,    to:"m1981", tint:"#DEDCD7" },
+    { key:"reagan1",  pres:"Ronald Reagan",     term:"first term",  from:"m1981", to:"m1985", tint:"#D5D2CC" },
+    { key:"reagan2",  pres:"Ronald Reagan",     term:"second term", from:"m1985", to:"m1989", tint:"#CBC8C1", cont:1 },
+    { key:"ghwb",     pres:"George H. W. Bush", term:"1989–93",     from:"m1989", to:"m1993", tint:"#C2BEB6" },
+    { key:"clinton1", pres:"Bill Clinton",      term:"first term",  from:"m1993", to:"m1997", tint:"#B8B4AB" },
+    { key:"clinton2", pres:"Bill Clinton",      term:"second term", from:"m1997", to:"m2001", tint:"#AEAAA0", cont:1 },
+    { key:"gwb1",     pres:"George W. Bush",    term:"first term",  from:"m2001", to:"m2005", tint:"#A5A095" },
+    { key:"gwb2",     pres:"George W. Bush",    term:"second term", from:"m2005", to:"m2009", tint:"#9B968A", cont:1 },
+    { key:"obama1",   pres:"Barack Obama",      term:"first term",  from:"m2009", to:"m2013", tint:"#918C7F" },
+    { key:"obama2",   pres:"Barack Obama",      term:"second term", from:"m2013", to:"m2017", tint:"#878174", cont:1 },
+    { key:"trump1",   pres:"Donald Trump",      term:"first term",  from:"m2017", to:"m2021", tint:"#F19A4E", trump:1 },
+    { key:"trump2",   pres:"Donald Trump",      term:"second term", from:"m2025", to:"live",  tint:"#DD5A12", trump:2, cont:1 },
+    { key:"biden",    pres:"Joe Biden",         term:"2021–25",     from:"m2021", to:"m2025", tint:"#7D7769" }
+  ];
+
+  var S = {
+    latest:{ date:"2026-08-20", amt:40033256786764.37 },
+    rate:9000000000, paceDays:90, builtAt:0,
+    mode:"both", floor:0, focus:null, loaded:false
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var nf0 = new Intl.NumberFormat("en-US", { maximumFractionDigits:0 });
+
+  function anchorTime(d){ return Date.parse(d + "T22:00:00Z"); }
+  function money(n){ return "$" + nf0.format(Math.round(n)); }
+  function tril(n){ return "$" + (n/1e12).toFixed(2) + "T"; }
+  function longDate(d){
+    return new Date(d + "T12:00:00Z").toLocaleDateString("en-US",
+      { year:"numeric", month:"short", day:"numeric", timeZone:"UTC" });
+  }
+  function stampFull(ms){
+    return new Date(ms).toLocaleString("en-US",
+      { month:"short", day:"numeric", hour:"numeric", minute:"2-digit" });
+  }
+  function daysStale(){
+    return Math.floor((Date.now() - anchorTime(S.latest.date)) / DAY);
+  }
+
+  /* ---------------- load the baked file ---------------- */
+
+  function loadData(){
+    return fetch(DATA_URL, { cache:"no-cache" })
+      .then(function(r){ if(!r.ok) throw new Error("HTTP " + r.status); return r.json(); })
+      .then(function(d){
+        if (!d.recordDate || !isFinite(d.recordAmount)) throw new Error("bad data file");
+
+        S.latest   = { date:d.recordDate, amt:Number(d.recordAmount) };
+        S.rate     = Number(d.ratePerDay) || S.rate;
+        S.paceDays = Number(d.paceObservedDays) || 90;
+        S.builtAt  = Date.parse(d.fetchedAt) || 0;
+
+        MARKS.m2025 = Number(d.baselineAmount);
+        MARK_DATE.m2025 = d.baselineDate;
+
+        Object.keys(d.marks || {}).forEach(function(k){
+          MARKS[k] = Number(d.marks[k].amount);
+          MARK_DATE[k] = d.marks[k].date;
+        });
+
+        S.loaded = true;
+      });
+  }
+
+  /* ---------------- values ---------------- */
+
+  function snapshot(){
+    var elapsed = Math.max(0, (Date.now() - anchorTime(S.latest.date)) / DAY);
+    var total = S.latest.amt + S.rate * elapsed;
+    var t2 = total - MARKS.m2025;
+    var t1 = MARKS.m2021 - MARKS.m2017;
+    var added = S.mode === "both" ? t1 + t2 : t2;
+    if (added < S.floor) added = S.floor; else S.floor = added;
+    return { total:total, added:added, t1:t1, t2:t2 };
+  }
+
+  function slices(snap){
+    return ERAS.map(function(e){
+      var amt = e.to === "live" ? snap.t2
+              : e.from === null ? MARKS[e.to]
+              : MARKS[e.to] - MARKS[e.from];
+      return { era:e, amt:amt, pct:amt / snap.total * 100 };
+    });
+  }
+
+  function isLit(era){ return era.trump === 2 || (era.trump === 1 && S.mode === "both"); }
+  function dimTint(era){ return era.trump ? "#B9B6AF" : era.tint; }
+
+  /* ---------------- counter ---------------- */
+
+  var headEl = $("head"), tailEl = $("tail"), shareEl = $("sharePct"), lastShare = 0;
+
+  function paintCounter(){
+    var snap = snapshot();
+    var s = nf0.format(Math.round(snap.added));
+    var cut = s.lastIndexOf(",");
+    headEl.textContent = s.slice(0, cut);
+    tailEl.textContent = s.slice(cut);
+    var now = Date.now();
+    if (now - lastShare > 500){
+      lastShare = now;
+      shareEl.textContent = (snap.added / snap.total * 100).toFixed(2) + "%";
+    }
+  }
+
+  /* ---------------- donut ---------------- */
+
+  var NS = "http://www.w3.org/2000/svg";
+  var CX = 150, CY = 150, R_OUT = 142, R_IN = 88;
+
+  function arcPath(a0, a1){
+    var pt = function(r,a){ return (CX + r*Math.cos(a)).toFixed(2) + "," + (CY + r*Math.sin(a)).toFixed(2); };
+    var big = (a1 - a0) > Math.PI ? 1 : 0;
+    return "M" + pt(R_OUT,a0) + "A" + R_OUT + "," + R_OUT + " 0 " + big + " 1 " + pt(R_OUT,a1) +
+           "L" + pt(R_IN,a1) + "A" + R_IN + "," + R_IN + " 0 " + big + " 0 " + pt(R_IN,a0) + "Z";
+  }
+
+  var donut = $("donut"), legend = $("legend");
+  var built = false, paths = {}, rows = {};
+
+  function buildChart(data){
+    donut.textContent = ""; legend.textContent = "";
+    paths = {}; rows = {};
+    data.forEach(function(d){
+      var p = document.createElementNS(NS, "path");
+      donut.appendChild(p);
+      paths[d.era.key] = p;
+
+      var li = document.createElement("li");
+      if (!d.era.cont) li.classList.add("newpres");
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.innerHTML = '<span class="sw"></span><span class="nm' + (d.era.cont ? " cont" : "") + '">' +
+        d.era.pres + '<span class="yr">' + d.era.term + '</span></span>' +
+        '<span class="amt"></span><span class="pc"></span>';
+      li.appendChild(btn);
+      legend.appendChild(li);
+      rows[d.era.key] = { li:li, btn:btn };
+
+      var on = function(){ setFocus(d.era.key); }, off = function(){ setFocus(null); };
+      p.addEventListener("mouseenter", on);
+      p.addEventListener("mouseleave", off);
+      btn.addEventListener("mouseenter", on);
+      btn.addEventListener("mouseleave", off);
+      btn.addEventListener("focus", on);
+      btn.addEventListener("blur", off);
+      btn.addEventListener("click", on);
+    });
+    built = true;
+  }
+
+  function paintChart(){
+    var snap = snapshot(), data = slices(snap);
+    if (!built) buildChart(data);
+    var a = -Math.PI / 2;
+    data.forEach(function(d){
+      var sweep = d.pct / 100 * Math.PI * 2;
+      var fill = isLit(d.era) ? d.era.tint : dimTint(d.era);
+      paths[d.era.key].setAttribute("d", arcPath(a, a + sweep));
+      paths[d.era.key].setAttribute("fill", fill);
+      a += sweep;
+      var r = rows[d.era.key];
+      r.li.classList.toggle("trump", isLit(d.era));
+      r.btn.querySelector(".sw").style.background = fill;
+      r.btn.querySelector(".amt").textContent = tril(d.amt);
+      r.btn.querySelector(".pc").textContent = d.pct.toFixed(1) + "%";
+      r.btn.setAttribute("aria-label", d.era.pres + ", " + d.era.term + ": " +
+        tril(d.amt) + ", " + d.pct.toFixed(1) + " percent of debt outstanding.");
+    });
+    paintHub(data, snap);
+  }
+
+  function paintHub(data, snap){
+    var pctEl = $("hubPct"), whoEl = $("hubWho"), amtEl = $("hubAmt");
+    if (S.focus){
+      var d = data.filter(function(x){ return x.era.key === S.focus; })[0];
+      pctEl.textContent = d.pct.toFixed(1) + "%";
+      pctEl.className = isLit(d.era) ? "pct" : "pct grey";
+      whoEl.textContent = d.era.pres === "Donald Trump" ? "Trump, " + d.era.term
+        : d.era.pres + (d.era.term.indexOf("term") > -1 ? ", " + d.era.term : "");
+      amtEl.textContent = tril(d.amt);
+    } else {
+      pctEl.textContent = (snap.added / snap.total * 100).toFixed(1) + "%";
+      pctEl.className = "pct";
+      whoEl.textContent = S.mode === "both" ? "Trump, both terms" : "Trump, second term";
+      amtEl.textContent = tril(snap.added);
+    }
+  }
+
+  function setFocus(key){
+    S.focus = key;
+    donut.classList.toggle("focused", !!key);
+    for (var k in paths) paths[k].classList.toggle("on", k === key);
+    var snap = snapshot();
+    paintHub(slices(snap), snap);
+  }
+
+  /* ---------------- static copy ---------------- */
+
+  function nextBusinessDay(from){
+    var d = new Date(from);
+    do { d.setUTCDate(d.getUTCDate() + 1); } while (d.getUTCDay() === 0 || d.getUTCDay() === 6);
+    return d;
+  }
+
+  function paintStatic(){
+    var both = S.mode === "both", snap = snapshot();
+
+    $("headline").textContent = both
+      ? "Federal debt added during Donald Trump's two terms in office"
+      : "Federal debt added during Donald Trump's second term";
+    $("eyebrow").textContent = both
+      ? "January 2017 – January 2021 and January 2025 – present"
+      : "Since January 20, 2025";
+    $("btnBoth").setAttribute("aria-pressed", both ? "true" : "false");
+    $("btnT2").setAttribute("aria-pressed", both ? "false" : "true");
+
+    $("perSec").textContent = money(S.rate / 86400);
+    $("perDay").textContent = "$" + (S.rate / 1e9).toFixed(2) + "B";
+
+    var bKey = both ? "m2017" : "m2025";
+    $("baseLabel").textContent = "Baseline — Treasury record of " + longDate(MARK_DATE[bKey]);
+    $("baseVal").textContent = money(MARKS[bKey]);
+    $("latestVal").textContent = longDate(S.latest.date);
+    $("officialVal").textContent = money(S.latest.amt);
+    $("totalVal").textContent = money(snap.total);
+    $("paceLabel").textContent = "Observed pace, trailing " + S.paceDays + " days";
+    $("paceVal").textContent = "$" + (S.rate / 1e9).toFixed(2) + " billion per day";
+
+    $("elapsedLabel").textContent = both ? "Days in office, both terms" : "Days since the inauguration";
+    $("elapsedVal").textContent = both
+      ? nf0.format(1461 + Math.floor((Date.now() - anchorTime(MARK_DATE.m2025)) / DAY)) + " days"
+      : nf0.format(Math.floor((Date.now() - anchorTime(MARK_DATE.m2025)) / DAY)) + " days";
+
+    $("builtVal").textContent = S.builtAt ? stampFull(S.builtAt) : "—";
+
+    var rel = nextBusinessDay(Math.max(Date.now(), anchorTime(S.latest.date)));
+    $("releaseVal").textContent = rel.toLocaleDateString("en-US",
+      { weekday:"long", month:"short", day:"numeric", timeZone:"UTC" });
+
+    paintStatus();
+  }
+
+  function paintStatus(){
+    var stale = daysStale();
+    var banner = $("staleBanner");
+
+    if (!S.loaded){
+      $("feedState").textContent = "Using built-in figures";
+      $("dot").className = "dot stale";
+      banner.classList.add("show");
+      banner.innerHTML = "<b>Data file could not be read.</b> The page is falling back to " +
+        "figures built into it, which may be badly out of date. Everything below is a projection.";
+      return;
+    }
+
+    $("feedState").textContent = "Treasury data · " + longDate(S.latest.date);
+
+    if (stale > STALE_DAYS){
+      $("dot").className = "dot stale";
+      banner.classList.add("show");
+      banner.innerHTML = "<b>This projection is running ahead of the data.</b> The newest Treasury " +
+        "figure held here is from " + longDate(S.latest.date) + ", " + stale + " days ago. " +
+        "Treasury publishes every business day, so the collection job has probably stopped. " +
+        "Treat the counter as indicative until it re-anchors.";
+    } else {
+      $("dot").className = "dot";
+      banner.classList.remove("show");
+    }
+  }
+
+  /* ---------------- wiring ---------------- */
+
+  function setMode(m){
+    if (S.mode === m) return;
+    S.mode = m; S.floor = 0;
+    paintStatic(); paintCounter(); paintChart();
+  }
+  $("btnBoth").addEventListener("click", function(){ setMode("both"); });
+  $("btnT2").addEventListener("click", function(){ setMode("t2"); });
+
+  function announce(){
+    var snap = snapshot();
+    $("srValue").textContent = money(snap.added) + " added, " +
+      (snap.added / snap.total * 100).toFixed(2) + " percent of debt outstanding.";
+  }
+
+  function redraw(){ paintStatic(); paintChart(); }
+
+  loadData().catch(function(){ S.loaded = false; }).then(function(){
+    redraw();
+    if (reduce) setInterval(paintCounter, 1000);
+    else (function loop(){ paintCounter(); requestAnimationFrame(loop); })();
+
+    setInterval(paintChart, 10000);
+    setInterval(announce, 30000);
+    announce();
+
+    // Re-read our own data file, not Treasury. This is a CDN hit, not an API call.
+    setInterval(function(){
+      if (!document.hidden) loadData().then(redraw).catch(function(){});
+    }, RECHECK_MS);
+  });
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "recordDate": "2026-08-20",
+  "recordAmount": 40033256786764.37,
+  "ratePerDay": 9000000000,
+  "paceObservedDays": 90,
+  "baselineDate": "2025-01-17",
+  "baselineAmount": 36207000000000,
+  "marks": {
+    "m1997": { "date": "1997-01-17", "amount": 5313997000000 },
+    "m2001": { "date": "2001-01-19", "amount": 5727776738304 },
+    "m2005": { "date": "2005-01-20", "amount": 7613215612328 },
+    "m2009": { "date": "2009-01-20", "amount": 10626877048913 },
+    "m2013": { "date": "2013-01-18", "amount": 16432730050569 },
+    "m2017": { "date": "2017-01-20", "amount": 19947304555212 },
+    "m2021": { "date": "2021-01-20", "amount": 27751896236414 }
+  },
+  "fetchedAt": "2026-08-23T00:00:00.000Z",
+  "seed": true,
+  "source": "Seed values. Replaced with exact Treasury figures on the first robot run."
+}
