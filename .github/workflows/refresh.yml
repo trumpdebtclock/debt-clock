@@ -1,0 +1,43 @@
+name: Refresh Treasury data
+
+on:
+  # Times are UTC. Treasury publishes about 3:00 PM Eastern on business days.
+  schedule:
+    - cron: "15 20 * * 1-5"   # ~4:15 PM ET  (first attempt)
+    - cron: "15 23 * * 1-5"   # ~7:15 PM ET  (retry if the first was delayed)
+  # Lets you press a button to run it by hand from the Actions tab.
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get the files
+        uses: actions/checkout@v4
+
+      - name: Use Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch the latest Treasury figures
+        run: node scripts/fetch-debt.mjs
+
+      - name: Save the result
+        run: |
+          git config user.name  "debt-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          if git diff --staged --quiet; then
+            echo "No change since last run. Nothing to commit."
+          else
+            git commit -m "data: Treasury record $(date -u +%Y-%m-%d)"
+            git push
+          fi
