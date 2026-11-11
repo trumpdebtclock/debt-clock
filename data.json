@@ -1,8 +1,8 @@
 {
-  "recordDate": "2026-11-06",
-  "recordAmount": 40552751019092.61,
-  "ratePerDay": 7335200513.154362,
-  "paceObservedDays": 91,
+  "recordDate": "2026-11-09",
+  "recordAmount": 40559796589243.37,
+  "ratePerDay": 6865186190.806597,
+  "paceObservedDays": 90,
   "baselineDate": "2025-01-17",
   "baselineAmount": 36206593315575.15,
   "marks": {
@@ -35,6 +35,6 @@
       "amount": 27751896236414.77
     }
   },
-  "fetchedAt": "2026-11-10T04:36:14.343Z",
+  "fetchedAt": "2026-11-11T00:39:30.541Z",
   "source": "U.S. Treasury Fiscal Data, Debt to the Penny"
 }
